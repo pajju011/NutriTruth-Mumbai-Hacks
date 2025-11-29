@@ -12,18 +12,23 @@ const AppState = {
 // PAGE NAVIGATION
 // ============================================
 function navigateToPage(pageName) {
+  console.log("📍 Navigating to:", pageName);
+
   // Hide all pages
   document.querySelectorAll(".page").forEach((page) => {
     page.classList.remove("active");
+    page.style.display = "none";
   });
 
-  // Show target page
+  // Show target page immediately
   const targetPage = document.getElementById(`${pageName}-page`);
   if (targetPage) {
-    setTimeout(() => {
-      targetPage.classList.add("active");
-      AppState.currentPage = pageName;
-    }, 100);
+    targetPage.style.display = "block";
+    targetPage.classList.add("active");
+    AppState.currentPage = pageName;
+    console.log("✅ Now showing:", pageName);
+  } else {
+    console.error("❌ Page not found:", pageName);
   }
 }
 
@@ -76,90 +81,8 @@ async function apiCall(endpoint, options = {}) {
 // ============================================
 // GOOGLE AUTHENTICATION
 // ============================================
-async function authenticateWithGoogle(userData) {
-  try {
-    const response = await apiCall("/auth/google", {
-      method: "POST",
-      body: JSON.stringify(userData),
-    });
-
-    // Save user and token from backend
-    AppState.user = response.user;
-    localStorage.setItem("nutritruth_user", JSON.stringify(response.user));
-    localStorage.setItem("nutritruth_token", response.token);
-
-    console.log("✅ Authentication successful:", response.user);
-    return response;
-  } catch (error) {
-    console.error("Authentication failed:", error);
-    throw error;
-  }
-}
-
-function initGoogleAuth() {
-  console.log("🚨 INITIALIZING GOOGLE AUTH");
-
-  // Clear any existing invalid tokens first
-  localStorage.removeItem("nutritruth_token");
-  localStorage.removeItem("nutritruth_user");
-
-  // Create user data for authentication
-  const userData = {
-    email: "nutritruth.user@gmail.com",
-    name: "NutriTruth User",
-    avatar_url:
-      "https://ui-avatars.com/api/?name=NutriTruth+User&background=4285F4&color=fff&size=200",
-  };
-
-  // Authenticate with backend
-  authenticateWithGoogle(userData)
-    .then(() => {
-      console.log("✅ USER AUTHENTICATED:", AppState.user);
-
-      // Force navigation immediately
-      console.log("🚨 FORCING NAVIGATION TO PROFILE SETUP");
-
-      // Hide landing page
-      const landingPage = document.getElementById("landing-page");
-      if (landingPage) {
-        landingPage.style.display = "none";
-      }
-
-      // Show profile setup page
-      const profilePage = document.getElementById("profile-setup-page");
-      if (profilePage) {
-        profilePage.style.display = "block";
-        profilePage.classList.add("active");
-      }
-
-      // Update app state
-      AppState.currentPage = "profile-setup";
-
-      // Show success
-      alert("✅ LOGGED IN SUCCESSFULLY!");
-    })
-    .catch((error) => {
-      console.error("Authentication failed:", error);
-      alert(
-        "❌ Login failed: " +
-          error.message +
-          "\n\nPlease make sure the backend server is running on port 3000."
-      );
-    });
-
-  // Also make any buttons work
-  document.querySelectorAll("button").forEach((btn) => {
-    if (
-      btn.textContent.includes("Google") ||
-      btn.textContent.includes("Continue")
-    ) {
-      btn.onclick = function () {
-        alert("✅ Already logged in!");
-        window.location.href = "#profile-setup";
-      };
-    }
-  });
-}
+// Note: Real Google authentication is handled in google-auth.js
+// This function is kept for backward compatibility if needed
 
 // Separate handler function for clarity
 async function handleLoginClick(e) {
@@ -291,6 +214,9 @@ function initAllergySelection() {
   });
 
   continueBtn.addEventListener("click", async () => {
+    console.log("🔘 Continue to Dashboard clicked");
+    console.log("📋 Selected allergies:", AppState.allergies);
+
     // Show loading
     continueBtn.disabled = true;
     continueBtn.innerHTML = `
@@ -301,50 +227,36 @@ function initAllergySelection() {
             <span>Saving...</span>
         `;
 
+    // Save to localStorage
+    localStorage.setItem(
+      "nutritruth_allergies",
+      JSON.stringify(AppState.allergies)
+    );
+    console.log("✅ Allergies saved to localStorage");
+
+    // Try backend (optional - don't block on failure)
     try {
-      // Save to localStorage (no backend needed)
-      localStorage.setItem(
-        "nutritruth_allergies",
-        JSON.stringify(AppState.allergies)
-      );
-
-      console.log("✅ Allergies saved:", AppState.allergies);
-
-      // Try backend (optional - if fails, continue anyway)
-      try {
-        await apiCall("/user/allergies", {
-          method: "POST",
-          body: JSON.stringify({ allergies: AppState.allergies }),
-        });
-        console.log("✅ Backend sync successful");
-      } catch (backendError) {
-        console.log(
-          "⚠️ Backend sync failed (continuing locally):",
-          backendError.message
-        );
-      }
-
-      // Navigate to dashboard
-      navigateToPage("dashboard");
-
-      // Initialize user profile in dashboard
-      initUserProfile();
-    } catch (error) {
-      console.error("Failed to save allergies:", error);
-      showResultNotification(
-        "Failed to save preferences. Please try again.",
-        "error"
-      );
-
-      // Reset button
-      continueBtn.disabled = false;
-      continueBtn.innerHTML = `
-                <span>Continue to Dashboard</span>
-                <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
-                </svg>
-            `;
+      await apiCall("/user/allergies", {
+        method: "POST",
+        body: JSON.stringify({ allergies: AppState.allergies }),
+      });
+      console.log("✅ Backend sync successful");
+    } catch (backendError) {
+      console.log("⚠️ Backend sync failed (continuing):", backendError.message);
     }
+
+    // Navigate to dashboard
+    console.log("🚀 Navigating to dashboard...");
+    navigateToPage("dashboard");
+
+    // Initialize user profile in dashboard
+    initUserProfile();
+
+    // Show success notification
+    showResultNotification(
+      "Preferences saved! Welcome to NutriTruth!",
+      "success"
+    );
   });
 }
 
@@ -353,9 +265,29 @@ function initAllergySelection() {
 // ============================================
 function initUserProfile() {
   const userInitial = document.getElementById("user-initial");
+  const userName = document.getElementById("user-name");
+  const userProfilePic = document.getElementById("user-profile-pic");
 
-  if (userInitial && AppState.user && AppState.user.name) {
-    userInitial.textContent = AppState.user.name.charAt(0).toUpperCase();
+  if (AppState.user) {
+    // Set user initial
+    if (userInitial) {
+      userInitial.textContent = AppState.user.name.charAt(0).toUpperCase();
+    }
+    
+    // Set user name
+    if (userName) {
+      userName.textContent = AppState.user.name;
+    }
+    
+    // Set profile picture
+    if (userProfilePic && AppState.user.avatar_url) {
+      userProfilePic.src = AppState.user.avatar_url;
+      userProfilePic.style.display = "block";
+    } else if (userInitial) {
+      userInitial.style.display = "flex";
+    }
+    
+    console.log("✅ User profile updated:", AppState.user);
   }
 }
 
@@ -1329,15 +1261,15 @@ function initNavigationButtons() {
 
   if (historyBtn) {
     historyBtn.addEventListener("click", () => {
-      // Navigate to scan history
-      showResultNotification("Scan history feature coming soon!", "info");
+      // Navigate to scan history page
+      window.location.href = "history.html";
     });
   }
 
   if (profileBtn) {
     profileBtn.addEventListener("click", () => {
-      // Navigate to profile
-      showResultNotification("Profile feature coming soon!", "info");
+      // Navigate to profile page
+      window.location.href = "profile.html";
     });
   }
 }
@@ -1389,7 +1321,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setTimeout(() => {
     // Initialize all features
     console.log("🔧 Initializing features...");
-    initGoogleAuth();
+    initGoogleSignIn();
     initAllergySelection();
     initImageUpload();
     initNavigationButtons();
@@ -1536,21 +1468,4 @@ window.emergencyLogin = () => {
   navigateToPage("profile-setup");
 };
 
-// Auto-activate emergency login if needed
-setTimeout(() => {
-  if (!AppState.user) {
-    console.log("🚨 No user found, checking if original login button works...");
-    const originalBtn = document.getElementById("google-login-btn");
-    if (originalBtn) {
-      console.log("✅ Original button found, testing click...");
-      // Try to trigger the original button
-      originalBtn.click();
-    } else {
-      console.log("❌ Original button not found, waiting...");
-      // Wait and try again
-      setTimeout(() => {
-        initGoogleAuth();
-      }, 1000);
-    }
-  }
-}, 2000);
+// Removed auto-login behavior - users must explicitly click the login button

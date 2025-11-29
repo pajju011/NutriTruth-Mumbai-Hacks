@@ -1,172 +1,206 @@
 // ============================================
-// REAL GOOGLE OAUTH 2.0 INTEGRATION
+// GOOGLE IDENTITY SERVICES (GIS) INTEGRATION
 // ============================================
 
-const GOOGLE_CONFIG = {
-    CLIENT_ID: '260430884397-9f63mcjq8a4kbu2m1r949nrf1r9deid4.apps.googleusercontent.com',
-    CLIENT_SECRET: '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',
-    REDIRECT_URI: 'http://localhost:8000/auth/callback',
-    SCOPE: 'email profile',
-    API_KEY: 'AIzaSyBU6xOROwHeB-GXsjd50C1HT0XJCJP5s1o'
-};
+const GOOGLE_CLIENT_ID =
+  "260430884397-9f63mcjq8a4kbu2m1r949nrf1r9deid4.apps.googleusercontent.com";
 
 // ============================================
 // GOOGLE SIGN-IN INITIALIZATION
 // ============================================
 function initGoogleSignIn() {
-    // Load Google Sign-In library
-    const script = document.createElement('script');
-    script.src = 'https://apis.google.com/js/platform.js';
-    script.onload = () => {
-        gapi.load('auth2', () => {
-            gapi.auth2.init({
-                client_id: GOOGLE_CONFIG.CLIENT_ID,
-                cookiepolicy: 'single_host_origin',
-                scope: GOOGLE_CONFIG.SCOPE
-            });
-            
-            // Render Google Sign-In button
-            gapi.signin2.render('google-login-btn', {
-                'onsuccess': handleGoogleSignIn,
-                'onfailure': handleGoogleSignInError,
-                'theme': 'dark',
-                'size': 'large',
-                'longtitle': true,
-                'width': 300,
-                'height': 50
-            });
-        });
-    };
-    document.head.appendChild(script);
+  // Check if user is already logged in
+  const savedUser = localStorage.getItem("nutritruth_user");
+  if (savedUser) {
+    console.log(
+      "✅ User already logged in, skipping Google Sign-In initialization"
+    );
+    return;
+  }
+
+  // Load Google Identity Services library
+  const script = document.createElement("script");
+  script.src = "https://accounts.google.com/gsi/client";
+  script.async = true;
+  script.defer = true;
+  script.onload = initializeGoogleButton;
+  script.onerror = () => {
+    console.error("Failed to load Google Sign-In library");
+    setupFallbackLogin();
+  };
+  document.head.appendChild(script);
 }
 
 // ============================================
-// HANDLE GOOGLE SIGN-IN SUCCESS
+// INITIALIZE GOOGLE BUTTON
 // ============================================
-async function handleGoogleSignIn(googleUser) {
-    try {
-        // Show loading state
-        const googleLoginBtn = document.getElementById('google-login-btn');
-        googleLoginBtn.disabled = true;
-        googleLoginBtn.innerHTML = `
-            <svg class="google-icon" viewBox="0 0 24 24" style="animation: spin 1s linear infinite;">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" opacity="0.3"/>
-                <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>
-            </svg>
-            <span>Signing in...</span>
-        `;
+function initializeGoogleButton() {
+  try {
+    // Initialize Google Sign-In
+    google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: handleCredentialResponse,
+      auto_select: false,
+      cancel_on_tap_outside: true,
+    });
 
-        // Get user profile information
-        const profile = googleUser.getBasicProfile();
-        const authResponse = googleUser.getAuthResponse();
-        
-        const userData = {
-            email: profile.getEmail(),
-            name: profile.getName(),
-            avatar_url: profile.getImageUrl(),
-            google_id: profile.getId(),
-            access_token: authResponse.access_token,
-            id_token: authResponse.id_token
-        };
+    // Get the button container
+    const googleLoginBtn = document.getElementById("google-login-btn");
+    if (googleLoginBtn) {
+      // Clear existing content and render Google button
+      googleLoginBtn.style.display = "none";
 
-        console.log('Google user data:', userData);
+      // Create a container for Google's rendered button
+      const googleBtnContainer = document.createElement("div");
+      googleBtnContainer.id = "google-btn-container";
+      googleBtnContainer.style.cssText =
+        "display: flex; justify-content: center; margin: 20px 0;";
+      googleLoginBtn.parentNode.insertBefore(
+        googleBtnContainer,
+        googleLoginBtn
+      );
 
-        // Authenticate with backend
-        const response = await apiCall('/auth/google', {
-            method: 'POST',
-            body: JSON.stringify(userData)
-        });
-
-        // Save user data and token
-        AppState.user = response.user;
-        localStorage.setItem('nutritruth_user', JSON.stringify(response.user));
-        localStorage.setItem('nutritruth_token', response.token);
-        localStorage.setItem('nutritruth_google_user', JSON.stringify(userData));
-
-        // Navigate to profile setup
-        navigateToPage('profile-setup');
-
-    } catch (error) {
-        console.error('Google authentication failed:', error);
-        showResultNotification('Failed to sign in with Google. Please try again.', 'error');
-        resetGoogleButton();
+      // Render the Google Sign-In button
+      google.accounts.id.renderButton(googleBtnContainer, {
+        type: "standard",
+        theme: "outline",
+        size: "large",
+        text: "continue_with",
+        shape: "rectangular",
+        width: 280,
+      });
     }
+
+    console.log("✅ Google Sign-In button rendered");
+  } catch (error) {
+    console.error("Failed to initialize Google Sign-In:", error);
+    setupFallbackLogin();
+  }
 }
 
 // ============================================
-// HANDLE GOOGLE SIGN-IN ERROR
+// HANDLE CREDENTIAL RESPONSE (JWT from Google)
 // ============================================
-function handleGoogleSignInError(error) {
-    console.error('Google Sign-In error:', error);
-    showResultNotification('Google Sign-In failed. Please try again.', 'error');
-    resetGoogleButton();
+async function handleCredentialResponse(response) {
+  try {
+    console.log("Google credential received");
+
+    // Decode the JWT to get user info
+    const payload = decodeJwtPayload(response.credential);
+
+    const userData = {
+      email: payload.email,
+      name: payload.name,
+      avatar_url: payload.picture,
+      google_id: payload.sub,
+      id_token: response.credential,
+    };
+
+    console.log("Google user data:", userData);
+
+    // Authenticate with backend
+    const backendResponse = await apiCall("/auth/google", {
+      method: "POST",
+      body: JSON.stringify(userData),
+    });
+
+    // Save user data and token
+    AppState.user = backendResponse.user;
+    localStorage.setItem(
+      "nutritruth_user",
+      JSON.stringify(backendResponse.user)
+    );
+    localStorage.setItem("nutritruth_token", backendResponse.token);
+    localStorage.setItem("nutritruth_google_user", JSON.stringify(userData));
+
+    // Navigate to profile setup
+    navigateToPage("profile-setup");
+  } catch (error) {
+    console.error("Google authentication failed:", error);
+    showResultNotification(
+      "Failed to sign in with Google. Please try again.",
+      "error"
+    );
+  }
 }
 
 // ============================================
-// RESET GOOGLE BUTTON
+// DECODE JWT PAYLOAD
 // ============================================
-function resetGoogleButton() {
-    const googleLoginBtn = document.getElementById('google-login-btn');
-    googleLoginBtn.disabled = false;
-    googleLoginBtn.innerHTML = `
-        <svg class="google-icon" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-        </svg>
-        <span>Continue with Google</span>
-    `;
+function decodeJwtPayload(token) {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map(function (c) {
+          return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+        })
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    console.error("Failed to decode JWT:", error);
+    return {};
+  }
+}
+
+// ============================================
+// FALLBACK LOGIN (Demo Mode)
+// ============================================
+function setupFallbackLogin() {
+  const googleLoginBtn = document.getElementById("google-login-btn");
+  if (googleLoginBtn) {
+    googleLoginBtn.style.display = "flex";
+    googleLoginBtn.onclick = () => {
+      // Demo login for testing
+      const demoUser = {
+        id: "demo-user-" + Date.now(),
+        email: "demo@nutritruth.app",
+        name: "Demo User",
+        avatar_url: null,
+      };
+
+      AppState.user = demoUser;
+      localStorage.setItem("nutritruth_user", JSON.stringify(demoUser));
+      localStorage.setItem("nutritruth_token", "demo-token");
+
+      showResultNotification("Signed in as Demo User", "success");
+      navigateToPage("profile-setup");
+    };
+  }
 }
 
 // ============================================
 // GOOGLE SIGN-OUT
 // ============================================
 function googleSignOut() {
-    const auth2 = gapi.auth2.getAuthInstance();
-    auth2.signOut().then(() => {
-        console.log('User signed out from Google');
-        clearAllData();
-    });
+  google.accounts.id.disableAutoSelect();
+  clearAllData();
 }
 
 // ============================================
 // CHECK GOOGLE AUTH STATUS
 // ============================================
 function checkGoogleAuthStatus() {
-    const savedGoogleUser = localStorage.getItem('nutritruth_google_user');
-    if (savedGoogleUser) {
-        try {
-            const googleUser = JSON.parse(savedGoogleUser);
-            console.log('Found saved Google user:', googleUser);
-            return googleUser;
-        } catch (error) {
-            console.error('Error parsing saved Google user:', error);
-        }
+  const savedGoogleUser = localStorage.getItem("nutritruth_google_user");
+  if (savedGoogleUser) {
+    try {
+      const googleUser = JSON.parse(savedGoogleUser);
+      console.log("Found saved Google user:", googleUser);
+      return googleUser;
+    } catch (error) {
+      console.error("Error parsing saved Google user:", error);
     }
-    return null;
-}
-
-// ============================================
-// UPDATE GOOGLE BUTTON HTML
-// ============================================
-function updateGoogleButtonHTML() {
-    const googleLoginBtn = document.getElementById('google-login-btn');
-    if (googleLoginBtn) {
-        googleLoginBtn.innerHTML = `
-            <div class="g-signin2" data-onsuccess="handleGoogleSignIn" data-onfailure="handleGoogleSignInError" 
-                 data-theme="dark" data-size="large" data-longtitle="true" data-width="300" data-height="50">
-            </div>
-        `;
-    }
+  }
+  return null;
 }
 
 // Export functions for global access
 window.GoogleAuth = {
-    initGoogleSignIn,
-    handleGoogleSignIn,
-    handleGoogleSignInError,
-    googleSignOut,
-    checkGoogleAuthStatus,
-    updateGoogleButtonHTML
+  initGoogleSignIn,
+  handleCredentialResponse,
+  googleSignOut,
+  checkGoogleAuthStatus,
 };

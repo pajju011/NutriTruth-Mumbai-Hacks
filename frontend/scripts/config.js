@@ -3,13 +3,16 @@
 
 const N8N_CONFIG = {
   // Webhook for OCR-based product image analysis
-  OCR_WEBHOOK_URL: "YOUR_N8N_OCR_WEBHOOK_URL",
+  OCR_WEBHOOK_URL:
+    "https://zoie-reeky-cutely.ngrok-free.dev/webhook-test/product-analyze",
 
   // Webhook for barcode scanning and lookup
-  BARCODE_WEBHOOK_URL: "YOUR_N8N_BARCODE_WEBHOOK_URL",
+  BARCODE_WEBHOOK_URL:
+    "https://zoie-reeky-cutely.ngrok-free.dev/webhook-test/product-analyze",
 
   // Webhook for product lookup (fallback from Open Food Facts)
-  BARCODE_LOOKUP_URL: "YOUR_N8N_BARCODE_LOOKUP_URL",
+  BARCODE_LOOKUP_URL:
+    "https://zoie-reeky-cutely.ngrok-free.dev/webhook-test/product-analyze",
 
   // Webhook for saving user preferences
   USER_PREFERENCES_WEBHOOK_URL: "YOUR_N8N_USER_PREFERENCES_WEBHOOK_URL",
@@ -22,9 +25,9 @@ const N8N_CONFIG = {
   RETRY_DELAY: 1000,
 
   // Feature flags
-  USE_N8N_OCR: false, // Set to true when n8n OCR is ready
-  USE_N8N_BARCODE: false, // Set to true when n8n barcode is ready
-  USE_N8N_LOOKUP: false, // Set to true when n8n lookup is ready
+  USE_N8N_OCR: true, // n8n OCR is ready
+  USE_N8N_BARCODE: true, // n8n barcode is ready
+  USE_N8N_LOOKUP: true, // n8n lookup is ready
 };
 
 // Google Vision API Configuration
