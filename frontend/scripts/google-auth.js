@@ -15,9 +15,9 @@ function initGoogleSignIn() {
     console.log(
       "✅ User already logged in, skipping Google Sign-In initialization"
     );
-    return;
+    return;c
   }
-
+  
   // Load Google Identity Services library
   const script = document.createElement("script");
   script.src = "https://accounts.google.com/gsi/client";
