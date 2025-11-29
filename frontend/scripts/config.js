@@ -25,9 +25,12 @@ const N8N_CONFIG = {
   RETRY_DELAY: 1000,
 
   // Feature flags
-  USE_N8N_OCR: true, // n8n OCR is ready
-  USE_N8N_BARCODE: true, // n8n barcode is ready
-  USE_N8N_LOOKUP: true, // n8n lookup is ready
+  USE_N8N_OCR: false, // Set to true when n8n is ready
+  USE_N8N_BARCODE: false, // Set to true when n8n is ready
+  USE_N8N_LOOKUP: false, // Set to true when n8n is ready
+
+  // Demo mode - returns sample data for testing
+  DEMO_MODE: true,
 };
 
 // Google Vision API Configuration
@@ -55,6 +58,12 @@ const GOOGLE_CONFIG = {
   REDIRECT_URI: "http://localhost:8000/auth/callback",
   SCOPE: "email profile",
 };
+
+// Make configs globally accessible
+window.N8N_CONFIG = N8N_CONFIG;
+window.GOOGLE_VISION_CONFIG = GOOGLE_VISION_CONFIG;
+window.OPEN_FOOD_FACTS_CONFIG = OPEN_FOOD_FACTS_CONFIG;
+window.GOOGLE_CONFIG = GOOGLE_CONFIG;
 
 // Export for use in app.js
 if (typeof module !== "undefined" && module.exports) {

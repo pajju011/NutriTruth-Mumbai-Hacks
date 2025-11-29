@@ -273,12 +273,12 @@ function initUserProfile() {
     if (userInitial) {
       userInitial.textContent = AppState.user.name.charAt(0).toUpperCase();
     }
-    
+
     // Set user name
     if (userName) {
       userName.textContent = AppState.user.name;
     }
-    
+
     // Set profile picture
     if (userProfilePic && AppState.user.avatar_url) {
       userProfilePic.src = AppState.user.avatar_url;
@@ -286,7 +286,7 @@ function initUserProfile() {
     } else if (userInitial) {
       userInitial.style.display = "flex";
     }
-    
+
     console.log("✅ User profile updated:", AppState.user);
   }
 }
@@ -330,35 +330,96 @@ function initImageUpload() {
 }
 
 // ============================================
+// PROCESS BARCODE IMAGE
+// ============================================
+async function processBarcodeImage(file) {
+  showLoadingModal("Scanning barcode...");
+
+  try {
+    let productData;
+    let barcodeNumber = "";
+
+    // Check if demo mode is enabled
+    if (window.N8N_CONFIG?.DEMO_MODE) {
+      showLoadingModal("Looking up product...");
+      await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulate processing
+      barcodeNumber = "5000159461122"; // KitKat barcode
+      productData = getDemoProductData(file);
+    } else {
+      // Extract barcode from image
+      showLoadingModal("Detecting barcode...");
+      barcodeNumber = await extractBarcodeFromImage(file);
+
+      // Fetch product data
+      showLoadingModal("Looking up product information...");
+      productData = await fetchProductByBarcode(barcodeNumber, file);
+      productData.imageUrl = URL.createObjectURL(file);
+    }
+
+    // Save to backend for history
+    await saveScanToBackend("barcode", productData, file, barcodeNumber);
+
+    // Store result and navigate to results page
+    localStorage.setItem(
+      "nutritruth_last_scan",
+      JSON.stringify({
+        type: "barcode",
+        barcode: barcodeNumber,
+        result: productData,
+        timestamp: new Date().toISOString(),
+      })
+    );
+
+    // Navigate to results page
+    window.location.href = "result.html";
+  } catch (error) {
+    console.error("Barcode scan failed:", error);
+    hideLoadingModal();
+    showResultNotification(`Failed to scan barcode: ${error.message}`, "error");
+  }
+}
+
+// ============================================
 // PROCESS PRODUCT IMAGE (REAL OCR PATH - NO BACKEND)
 // ============================================
 async function processProductImage(file) {
   showLoadingModal("Analyzing product image...");
 
   try {
-    // Step 1: Extract text using Google Vision API
-    showLoadingModal("Extracting text from image...");
-    const extractedText = await extractTextFromImage(file);
+    let productData;
+    let extractedText = "";
 
-    if (!extractedText || extractedText.trim().length === 0) {
-      throw new Error("No text could be extracted from the image");
+    // Check if demo mode is enabled
+    if (window.N8N_CONFIG?.DEMO_MODE) {
+      showLoadingModal("Analyzing product...");
+      await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulate processing
+      productData = getDemoProductData(file);
+      extractedText = "Demo mode - KitKat sample data";
+    } else {
+      // Step 1: Extract text using Google Vision API
+      showLoadingModal("Extracting text from image...");
+      extractedText = await extractTextFromImage(file);
+
+      if (!extractedText || extractedText.trim().length === 0) {
+        throw new Error("No text could be extracted from the image");
+      }
+
+      // Step 2: Parse ingredients and nutrition from extracted text
+      showLoadingModal("Analyzing ingredients and nutrition...");
+      const analysisResult = await analyzeExtractedText(extractedText);
+
+      // Step 3: Create product data
+      productData = {
+        success: true,
+        productName: analysisResult.productName || "Scanned Product",
+        brand: analysisResult.brand || "Unknown Brand",
+        category: "Food Product",
+        ingredients: analysisResult.ingredients || [],
+        allergenWarnings: analysisResult.allergenWarnings || [],
+        nutritionFacts: analysisResult.nutritionFacts || getDefaultNutrition(),
+        imageUrl: URL.createObjectURL(file),
+      };
     }
-
-    // Step 2: Parse ingredients and nutrition from extracted text
-    showLoadingModal("Analyzing ingredients and nutrition...");
-    const analysisResult = await analyzeExtractedText(extractedText);
-
-    // Step 3: Create product data
-    const productData = {
-      success: true,
-      productName: analysisResult.productName || "Scanned Product",
-      brand: analysisResult.brand || "Unknown Brand",
-      category: "Food Product",
-      ingredients: analysisResult.ingredients || [],
-      allergenWarnings: analysisResult.allergenWarnings || [],
-      nutritionFacts: analysisResult.nutritionFacts || getDefaultNutrition(),
-      imageUrl: URL.createObjectURL(file),
-    };
 
     // Save to backend for history (optional)
     await saveScanToBackend("image", productData, file);
@@ -384,6 +445,165 @@ async function processProductImage(file) {
       "error"
     );
   }
+}
+
+/**
+ * Get demo product data for testing
+ * Based on Beef Curry Rice product from image
+ */
+function getDemoProductData(file) {
+  // Check user allergies to generate warnings
+  const userAllergies = AppState.allergies || [];
+  const detectedAllergens = ["Soy", "Gluten"];
+
+  // Find matches between user allergies and product allergens
+  const matches = userAllergies.filter((allergy) =>
+    detectedAllergens.some(
+      (detected) =>
+        detected.toLowerCase().includes(allergy.toLowerCase()) ||
+        allergy.toLowerCase().includes(detected.toLowerCase())
+    )
+  );
+
+  return {
+    // Required fields for result.js
+    name: "Beef Curry with Rice",
+    brand: "Ready Meals Co.",
+    barcode: "5012345678901",
+    category: "Ready Meals",
+    image: file
+      ? URL.createObjectURL(file)
+      : "https://via.placeholder.com/400x400?text=Product+Image",
+
+    // Health analysis
+    healthScore: 62,
+    healthTag: "risky",
+
+    // Nutrition data (per 100g as sold - from image)
+    nutrition: {
+      calories: 365,
+      totalFat: 7.1,
+      saturatedFat: 3.3,
+      transFat: 0,
+      cholesterol: 25,
+      sodium: 450,
+      totalCarbs: 63.7,
+      fiber: 3.2,
+      sugars: 7.4,
+      protein: 11.5,
+      vitaminD: 0,
+      calcium: 40,
+      iron: 2.5,
+      potassium: 280,
+    },
+
+    // Macro distribution (calculated from nutrition)
+    macros: {
+      carbs: 71, // 63.7g carbs
+      protein: 13, // 11.5g protein
+      fat: 16, // 7.1g fat
+    },
+
+    // Ingredients list with safety flags
+    ingredients: [
+      { name: "Rice", safe: true },
+      { name: "Water", safe: true },
+      { name: "Beef", safe: true },
+      {
+        name: "Prepared Soya Protein",
+        safe: false,
+        harmful: true,
+        severity: "low",
+      },
+      { name: "Onion", safe: true },
+      { name: "Cornflour", safe: true },
+      { name: "Red & Green Peppers", safe: true },
+      { name: "Tomato", safe: true },
+      { name: "Sugar", safe: true },
+      { name: "Carrot", safe: true },
+      { name: "Peas", safe: true },
+      {
+        name: "Beef Fat with Antioxidant (BHA)",
+        safe: false,
+        harmful: true,
+        severity: "medium",
+      },
+      { name: "Curry Spices", safe: true },
+      { name: "Salt", safe: true },
+      { name: "Yeast Extract", safe: true },
+      { name: "Citric Acid", safe: true },
+      {
+        name: "Flavour Enhancers (Monosodium Glutamate, Sodium 5'-Ribonucleotide)",
+        safe: false,
+        harmful: true,
+        severity: "medium",
+      },
+      { name: "Colour (Caramel)", safe: true },
+      { name: "Maltodextrin", safe: true },
+      {
+        name: "Hydrogenated Vegetable Oil",
+        safe: false,
+        harmful: true,
+        severity: "high",
+      },
+      { name: "Acidity Regulator (Sodium Citrate)", safe: true },
+    ],
+
+    // Harmful ingredients details
+    harmfulIngredients: [
+      {
+        name: "Monosodium Glutamate (MSG)",
+        severity: "medium",
+        eNumber: "E621",
+        description:
+          "A flavour enhancer that may cause headaches, flushing, and sweating in sensitive individuals. Known as 'Chinese Restaurant Syndrome'. Generally recognized as safe but some people report adverse reactions.",
+      },
+      {
+        name: "Hydrogenated Vegetable Oil",
+        severity: "high",
+        eNumber: null,
+        description:
+          "Contains trans fats which increase bad cholesterol (LDL) and decrease good cholesterol (HDL). Linked to increased risk of heart disease, stroke, and type 2 diabetes.",
+      },
+      {
+        name: "BHA (Butylated Hydroxyanisole)",
+        severity: "medium",
+        eNumber: "E320",
+        description:
+          "An antioxidant preservative. Classified as 'reasonably anticipated to be a human carcinogen' by the National Toxicology Program. May cause allergic reactions in some people.",
+      },
+      {
+        name: "Soya Protein",
+        severity: "low",
+        eNumber: null,
+        description:
+          "May cause allergic reactions in people with soy allergies. Also a common GMO ingredient unless specified organic.",
+      },
+    ],
+
+    // Advertisement claims verification
+    adClaims: [
+      {
+        claim: "Less than 10% meat as served",
+        truthScore: 95,
+        explanation:
+          "The label honestly states the meat content is less than 10%. This is transparent labeling, though the actual meat content is quite low for a 'beef curry' product.",
+      },
+      {
+        claim: "Ready Meal - Quick & Convenient",
+        truthScore: 80,
+        explanation:
+          "True that it's convenient, but ready meals typically contain more preservatives and sodium than home-cooked alternatives.",
+      },
+    ],
+
+    // Allergen information
+    allergenWarnings: {
+      detected: detectedAllergens,
+      userAllergies: userAllergies,
+      matches: matches,
+    },
+  };
 }
 
 /**
@@ -601,7 +821,7 @@ function identifyAllergensFromText(ingredients) {
 }
 
 /**
- * Save scan to backend for history (optional)
+ * Save scan to backend for history (optional - skipped in demo mode)
  */
 async function saveScanToBackend(
   scanType,
@@ -609,6 +829,12 @@ async function saveScanToBackend(
   file,
   barcodeNumber = null
 ) {
+  // Skip in demo mode
+  if (window.N8N_CONFIG?.DEMO_MODE) {
+    console.log("Demo mode - skipping backend save");
+    return;
+  }
+
   try {
     if (!AppState.user) return; // Only save if user is logged in
 
@@ -618,12 +844,18 @@ async function saveScanToBackend(
     if (file) formData.append("image", file);
     if (barcodeNumber) formData.append("barcode", barcodeNumber);
 
-    const response = await apiCall("/scan-history", {
+    const token = localStorage.getItem("nutritruth_token");
+    const response = await fetch(`${API_BASE_URL}/scan-history`, {
       method: "POST",
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
       body: formData,
     });
 
-    console.log("Scan saved to backend:", response);
+    if (response.ok) {
+      console.log("Scan saved to backend");
+    }
   } catch (error) {
     console.log("Failed to save scan to backend (optional):", error);
     // Don't throw error - this is optional

@@ -117,11 +117,13 @@ function loadProductData() {
   if (productStr) {
     const scanData = JSON.parse(productStr);
     ResultState.productData = scanData.result || scanData;
+    console.log("Loaded product data:", ResultState.productData);
   } else {
     // Fallback to old key
     productStr = localStorage.getItem("nutritruth_current_product");
     if (productStr) {
       ResultState.productData = JSON.parse(productStr);
+      console.log("Loaded product data (fallback):", ResultState.productData);
     }
   }
 }
@@ -245,15 +247,23 @@ function setupEventListeners() {
 function renderProductHeader() {
   const data = ResultState.productData;
 
-  document.getElementById("product-name").textContent = data.name;
-  document.getElementById("product-brand").textContent = data.brand;
+  // Handle both data formats (name vs productName)
+  const productName = data.name || data.productName || "Unknown Product";
+  const productBrand = data.brand || "Unknown Brand";
+  const productBarcode = data.barcode || "N/A";
+  const productImage = data.image || data.imageUrl || "";
+
+  document.getElementById("product-name").textContent = productName;
+  document.getElementById("product-brand").textContent = productBrand;
   document.getElementById(
     "product-barcode"
-  ).textContent = `Barcode: ${data.barcode}`;
+  ).textContent = `Barcode: ${productBarcode}`;
 
-  const productImage = document.getElementById("product-image");
-  productImage.src = data.image;
-  productImage.alt = data.name;
+  const imgElement = document.getElementById("product-image");
+  if (productImage) {
+    imgElement.src = productImage;
+    imgElement.alt = productName;
+  }
 }
 
 /**
@@ -266,42 +276,97 @@ function renderProductAnalysis() {
   const healthTag = document.getElementById("health-tag");
   const healthScore = document.getElementById("health-score");
 
-  healthTag.className = `health-tag ${data.healthTag}`;
-  healthTag.textContent =
-    data.healthTag.charAt(0).toUpperCase() + data.healthTag.slice(1);
-  healthScore.textContent = `${data.healthScore}/100`;
+  const tag = data.healthTag || "risky";
+  const score = data.healthScore || 50;
+
+  healthTag.className = `health-tag ${tag}`;
+  healthTag.textContent = tag.charAt(0).toUpperCase() + tag.slice(1);
+  healthScore.textContent = `${score}/100`;
+
+  // Get nutrition data (handle both formats)
+  const nutrition = data.nutrition ||
+    data.nutritionFacts || {
+      calories: 0,
+      totalFat: 0,
+      saturatedFat: 0,
+      transFat: 0,
+      cholesterol: 0,
+      sodium: 0,
+      totalCarbs: 0,
+      fiber: 0,
+      sugars: 0,
+      protein: 0,
+    };
+
+  // Calculate macros if not provided
+  const macros = data.macros || calculateMacros(nutrition);
 
   // Create charts
-  createNutrientBarChart(data.nutrition);
-  createMacroPieChart(data.macros);
+  createNutrientBarChart(nutrition);
+  createMacroPieChart(macros);
 
   // Create nutrition table
-  createNutritionTable(data.nutrition);
+  createNutritionTable(nutrition);
+}
+
+/**
+ * Calculate macro percentages from nutrition data
+ */
+function calculateMacros(nutrition) {
+  const carbs = nutrition.totalCarbs || 0;
+  const protein = nutrition.protein || 0;
+  const fat = nutrition.totalFat || 0;
+  const total = carbs + protein + fat;
+
+  if (total === 0) {
+    return { carbs: 33, protein: 33, fat: 34 };
+  }
+
+  return {
+    carbs: Math.round((carbs / total) * 100),
+    protein: Math.round((protein / total) * 100),
+    fat: Math.round((fat / total) * 100),
+  };
 }
 
 /**
  * Create nutrient bar chart
  */
 function createNutrientBarChart(nutrition) {
-  const ctx = document.getElementById("nutrient-bar-chart").getContext("2d");
+  const canvas = document.getElementById("nutrient-bar-chart");
+  if (!canvas) {
+    console.error("Nutrient bar chart canvas not found");
+    return;
+  }
+
+  const ctx = canvas.getContext("2d");
 
   // Destroy existing chart if any
   if (ResultState.charts.nutrientBar) {
     ResultState.charts.nutrientBar.destroy();
   }
 
+  // Handle both sugars and sugar field names, with defaults
+  const sugars = nutrition.sugars || nutrition.sugar || 0;
+  const sodium = nutrition.sodium || 0;
+  const totalCarbs = nutrition.totalCarbs || nutrition.carbohydrates || 0;
+  const totalFat = nutrition.totalFat || nutrition.fat || 0;
+  const protein = nutrition.protein || 0;
+
+  console.log("Bar Chart data:", {
+    sugars,
+    sodium,
+    totalCarbs,
+    totalFat,
+    protein,
+  });
+
   const data = {
     labels: ["Sugar", "Sodium", "Total Carbs", "Total Fat", "Protein"],
     datasets: [
       {
         label: "Amount (g/mg)",
-        data: [
-          nutrition.sugars,
-          nutrition.sodium,
-          nutrition.totalCarbs,
-          nutrition.totalFat,
-          nutrition.protein,
-        ],
+        data: [sugars, sodium, totalCarbs, totalFat, protein],
         backgroundColor: [
           "rgba(239, 68, 68, 0.8)", // Sugar - red
           "rgba(245, 158, 11, 0.8)", // Sodium - orange
@@ -381,18 +446,31 @@ function createNutrientBarChart(nutrition) {
  * Create macro pie chart
  */
 function createMacroPieChart(macros) {
-  const ctx = document.getElementById("macro-pie-chart").getContext("2d");
+  const canvas = document.getElementById("macro-pie-chart");
+  if (!canvas) {
+    console.error("Macro pie chart canvas not found");
+    return;
+  }
+
+  const ctx = canvas.getContext("2d");
 
   // Destroy existing chart if any
   if (ResultState.charts.macroPie) {
     ResultState.charts.macroPie.destroy();
   }
 
+  // Ensure we have valid macro values
+  const carbsVal = macros.carbs || 33;
+  const proteinVal = macros.protein || 33;
+  const fatVal = macros.fat || 34;
+
+  console.log("Pie Chart data:", { carbsVal, proteinVal, fatVal });
+
   const data = {
     labels: ["Carbohydrates", "Protein", "Fat"],
     datasets: [
       {
-        data: [macros.carbs, macros.protein, macros.fat],
+        data: [carbsVal, proteinVal, fatVal],
         backgroundColor: [
           "rgba(59, 130, 246, 0.8)", // Carbs - blue
           "rgba(16, 185, 129, 0.8)", // Protein - green
@@ -585,16 +663,22 @@ function renderIngredientAnalysis() {
       .join("");
   }
 
-  // Display all ingredients
+  // Display all ingredients - handle both array of strings and array of objects
   const ingredientsList = document.getElementById("all-ingredients-list");
-  ingredientsList.innerHTML = data.ingredients
-    .map(
-      (ingredient) => `
-        <span class="ingredient-tag ${ingredient.harmful ? "harmful" : "safe"}">
-            ${ingredient.name}
+  const ingredients = data.ingredients || [];
+
+  ingredientsList.innerHTML = ingredients
+    .map((ingredient) => {
+      // Handle both formats: string or object with name property
+      const name =
+        typeof ingredient === "string" ? ingredient : ingredient.name;
+      const isHarmful = typeof ingredient === "object" && ingredient.harmful;
+      return `
+        <span class="ingredient-tag ${isHarmful ? "harmful" : "safe"}">
+            ${name}
         </span>
-    `
-    )
+      `;
+    })
     .join("");
 }
 
@@ -784,16 +868,20 @@ function generatePDFReport(data) {
         <h2 class="section-title">Product Information</h2>
         <table>
           <tr><th>Product Name</th><td>${data.name}</td></tr>
-          <tr><th>Brand</th><td>${data.brand || 'Unknown'}</td></tr>
-          <tr><th>Barcode</th><td>${data.barcode || 'N/A'}</td></tr>
-          <tr><th>Category</th><td>${data.category || 'Food Product'}</td></tr>
+          <tr><th>Brand</th><td>${data.brand || "Unknown"}</td></tr>
+          <tr><th>Barcode</th><td>${data.barcode || "N/A"}</td></tr>
+          <tr><th>Category</th><td>${data.category || "Food Product"}</td></tr>
         </table>
       </div>
 
       <div class="section">
         <h2 class="section-title">Health Analysis</h2>
-        <p><strong>Overall Health Score:</strong> <span class="health-score">${data.healthScore}/100</span></p>
-        <p><strong>Health Tag:</strong> <span class="badge ${data.healthTag}">${data.healthTag.toUpperCase()}</span></p>
+        <p><strong>Overall Health Score:</strong> <span class="health-score">${
+          data.healthScore
+        }/100</span></p>
+        <p><strong>Health Tag:</strong> <span class="badge ${
+          data.healthTag
+        }">${data.healthTag.toUpperCase()}</span></p>
       </div>
 
       <div class="section">
@@ -802,35 +890,53 @@ function generatePDFReport(data) {
           <tr><th>Nutrient</th><th>Amount</th></tr>
           <tr><td>Calories</td><td>${data.nutrition.calories} kcal</td></tr>
           <tr><td>Total Fat</td><td>${data.nutrition.totalFat}g</td></tr>
-          <tr><td>Saturated Fat</td><td>${data.nutrition.saturatedFat}g</td></tr>
+          <tr><td>Saturated Fat</td><td>${
+            data.nutrition.saturatedFat
+          }g</td></tr>
           <tr><td>Cholesterol</td><td>${data.nutrition.cholesterol}mg</td></tr>
           <tr><td>Sodium</td><td>${data.nutrition.sodium}mg</td></tr>
-          <tr><td>Total Carbohydrates</td><td>${data.nutrition.totalCarbs}g</td></tr>
+          <tr><td>Total Carbohydrates</td><td>${
+            data.nutrition.totalCarbs
+          }g</td></tr>
           <tr><td>Dietary Fiber</td><td>${data.nutrition.fiber}g</td></tr>
           <tr><td>Total Sugars</td><td>${data.nutrition.sugars}g</td></tr>
           <tr><td>Protein</td><td>${data.nutrition.protein}g</td></tr>
         </table>
       </div>
 
-      ${data.harmfulIngredients && data.harmfulIngredients.length > 0 ? `
+      ${
+        data.harmfulIngredients && data.harmfulIngredients.length > 0
+          ? `
       <div class="section">
         <h2 class="section-title warning">⚠️ Harmful Ingredients Detected</h2>
         <table>
           <tr><th>Ingredient</th><th>Severity</th><th>Description</th></tr>
-          ${data.harmfulIngredients.map(ing => `
+          ${data.harmfulIngredients
+            .map(
+              (ing) => `
             <tr>
               <td>${ing.name}</td>
-              <td><span class="badge ${ing.severity === 'high' ? 'avoid' : ing.severity === 'medium' ? 'risky' : 'healthy'}">${ing.severity.toUpperCase()}</span></td>
+              <td><span class="badge ${
+                ing.severity === "high"
+                  ? "avoid"
+                  : ing.severity === "medium"
+                  ? "risky"
+                  : "healthy"
+              }">${ing.severity.toUpperCase()}</span></td>
               <td>${ing.description}</td>
             </tr>
-          `).join('')}
+          `
+            )
+            .join("")}
         </table>
       </div>
-      ` : ''}
+      `
+          : ""
+      }
 
       <div class="section">
         <h2 class="section-title">Ingredients</h2>
-        <p>${data.ingredients.map(i => i.name).join(', ')}</p>
+        <p>${data.ingredients.map((i) => i.name).join(", ")}</p>
       </div>
 
       <div class="footer">
@@ -842,11 +948,13 @@ function generatePDFReport(data) {
   `;
 
   // Create blob and download
-  const blob = new Blob([reportHTML], { type: 'text/html' });
+  const blob = new Blob([reportHTML], { type: "text/html" });
   const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
+  const link = document.createElement("a");
   link.href = url;
-  link.download = `NutriTruth_Report_${data.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.html`;
+  link.download = `NutriTruth_Report_${data.name.replace(/\s+/g, "_")}_${
+    new Date().toISOString().split("T")[0]
+  }.html`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
