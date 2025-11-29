@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="NutriTruth - Discover what's really in your food. Scan products, check ingredients, and make informed choices based on your dietary needs."
+    />
+    <title>NutriTruth - Know What You Eat</title>
+    <link rel="stylesheet" href="styles/main.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- Landing Page -->
+    <div id="landing-page" class="page active">
+      <div class="landing-container">
+        <div class="landing-background">
+          <div class="gradient-orb orb-1"></div>
+          <div class="gradient-orb orb-2"></div>
+          <div class="gradient-orb orb-3"></div>
+        </div>
+
+        <div class="landing-content">
+          <div class="logo-section">
+            <div
+              class="logo-icon"
+              style="
+                width: 120px;
+                height: 120px;
+                margin: 0 auto 1.5rem;
+                position: relative;
+              "
+            >
+              <img
+                src="images/logo.svg"
+                alt="NutriTruth Logo"
+                style="width: 100%; height: 100%; object-fit: contain"
+              />
+            </div>
+            <h1 class="brand-name">NutriTruth</h1>
+          </div>
+
+          <div class="hero-text">
+            <h2 class="hero-title">Know What You Eat</h2>
+            <p class="hero-subtitle">
+              Scan any product and discover the truth about its ingredients.
+              Make informed choices for your health.
+            </p>
+          </div>
+
+          <div class="cta-section">
+            <button id="google-login-btn" class="google-btn">
+              <svg class="google-icon" viewBox="0 0 24 24">
+                <path
+                  fill="#4285F4"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                />
+              </svg>
+              <span>Continue with Google</span>
+            </button>
+
+            <p class="privacy-note">
+              <svg
+                class="shield-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                />
+              </svg>
+              Your data is secure and private
+            </p>
+          </div>
+
+          <div class="features-preview">
+            <div class="feature-badge">
+              <span class="badge-icon">📸</span>
+              <span>Scan Products</span>
+            </div>
+            <div class="feature-badge">
+              <span class="badge-icon">🔍</span>
+              <span>Check Ingredients</span>
+            </div>
+            <div class="feature-badge">
+              <span class="badge-icon">✨</span>
+              <span>Personalized Alerts</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile Setup Page -->
+    <div id="profile-setup-page" class="page">
+      <div class="setup-container">
+        <div class="setup-header">
+          <div class="progress-bar">
+            <div class="progress-fill"></div>
+          </div>
+          <h2 class="setup-title">Let's Personalize Your Experience</h2>
+          <p class="setup-subtitle">
+            Tell us about your dietary restrictions so we can keep you safe
+          </p>
+        </div>
+
+        <div class="allergies-section">
+          <h3 class="section-label">
+            Do you have any allergies or dietary restrictions?
+          </h3>
+
+          <div class="allergies-grid">
+            <div class="allergy-card" data-allergy="peanut">
+              <div class="allergy-icon">🥜</div>
+              <div class="allergy-name">Peanut</div>
+              <div class="check-indicator">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="3"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <div class="allergy-card" data-allergy="soy">
+              <div class="allergy-icon">🌱</div>
+              <div class="allergy-name">Soy</div>
+              <div class="check-indicator">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="3"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <div class="allergy-card" data-allergy="lactose">
+              <div class="allergy-icon">🥛</div>
+              <div class="allergy-name">Lactose</div>
+              <div class="check-indicator">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="3"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <div class="allergy-card" data-allergy="gluten">
+              <div class="allergy-icon">🌾</div>
+              <div class="allergy-name">Gluten</div>
+              <div class="check-indicator">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="3"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <div class="allergy-card" data-allergy="seafood">
+              <div class="allergy-icon">🦐</div>
+              <div class="allergy-name">Seafood</div>
+              <div class="check-indicator">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="3"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <div class="allergy-card" data-allergy="artificial">
+              <div class="allergy-icon">🧪</div>
+              <div class="allergy-name">Artificial Colors/Flavors</div>
+              <div class="check-indicator">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="3"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <div class="allergy-card none-card" data-allergy="none">
+              <div class="allergy-icon">✅</div>
+              <div class="allergy-name">None</div>
+              <div class="check-indicator">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="3"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <button id="continue-to-dashboard-btn" class="primary-btn" disabled>
+            <span>Continue to Dashboard</span>
+            <svg
+              class="arrow-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 7l5 5m0 0l-5 5m5-5H6"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard Page -->
+    <div id="dashboard-page" class="page">
+      <nav class="dashboard-nav">
+        <div class="nav-content">
+          <div class="nav-brand">
+            <div
+              class="nav-logo"
+              style="width: 40px; height: 40px; flex-shrink: 0"
+            >
+              <img
+                src="images/logo.jpg"
+                alt="NutriTruth Logo"
+                style="width: 100%; height: 100%; object-fit: contain"
+              />
+            </div>
+            <span class="nav-brand-name">NutriTruth</span>
+          </div>
+
+          <div class="nav-actions">
+            <button class="nav-btn" id="history-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span>History</span>
+            </button>
+            <button class="nav-btn" id="profile-btn">
+              <div class="profile-avatar">
+                <span id="user-initial">U</span>
+              </div>
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      <main class="dashboard-main">
+        <div class="dashboard-container">
+          <div class="welcome-section">
+            <h1 class="dashboard-title">What would you like to scan?</h1>
+            <p class="dashboard-subtitle">
+              Choose how you want to check your product
+            </p>
+          </div>
+
+          <div class="scan-options">
+            <div class="scan-card" id="image-upload-card">
+              <div class="scan-card-glow"></div>
+              <div class="scan-card-content">
+                <div class="scan-icon">
+                  <svg
+                    viewBox="0 0 64 64"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <rect
+                      x="12"
+                      y="16"
+                      width="40"
+                      height="32"
+                      rx="4"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      fill="none"
+                    />
+                    <circle
+                      cx="32"
+                      cy="32"
+                      r="8"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      fill="none"
+                    />
+                    <circle cx="44" cy="24" r="2" fill="currentColor" />
+                    <path
+                      d="M12 40L20 32L28 40L36 32L52 48"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </div>
+                <h3 class="scan-card-title">Upload Product Image</h3>
+                <p class="scan-card-description">
+                  Take a photo of the nutrition label or ingredients list
+                </p>
+                <button class="scan-action-btn">
+                  <span>Choose Image</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                </button>
+                <input
+                  type="file"
+                  id="product-image-input"
+                  accept="image/*"
+                  hidden
+                />
+              </div>
+            </div>
+
+            <div class="scan-card" id="barcode-upload-card">
+              <div class="scan-card-glow"></div>
+              <div class="scan-card-content">
+                <div class="scan-icon barcode-icon">
+                  <svg
+                    viewBox="0 0 64 64"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <rect
+                      x="14"
+                      y="20"
+                      width="3"
+                      height="24"
+                      fill="currentColor"
+                    />
+                    <rect
+                      x="20"
+                      y="20"
+                      width="2"
+                      height="24"
+                      fill="currentColor"
+                    />
+                    <rect
+                      x="24"
+                      y="20"
+                      width="4"
+                      height="24"
+                      fill="currentColor"
+                    />
+                    <rect
+                      x="30"
+                      y="20"
+                      width="2"
+                      height="24"
+                      fill="currentColor"
+                    />
+                    <rect
+                      x="34"
+                      y="20"
+                      width="3"
+                      height="24"
+                      fill="currentColor"
+                    />
+                    <rect
+                      x="39"
+                      y="20"
+                      width="2"
+                      height="24"
+                      fill="currentColor"
+                    />
+                    <rect
+                      x="43"
+                      y="20"
+                      width="4"
+                      height="24"
+                      fill="currentColor"
+                    />
+                    <rect
+                      x="49"
+                      y="20"
+                      width="2"
+                      height="24"
+                      fill="currentColor"
+                    />
+                    <path
+                      d="M12 16H20V12H12V16ZM12 12V16"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    />
+                    <path
+                      d="M44 16H52V12H44V16Z"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    />
+                    <path
+                      d="M12 52H20V48H12V52Z"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    />
+                    <path
+                      d="M44 52H52V48H44V52Z"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    />
+                  </svg>
+                </div>
+                <h3 class="scan-card-title">Scan Barcode</h3>
+                <p class="scan-card-description">
+                  Take a photo of the product barcode for instant lookup
+                </p>
+                <button class="scan-action-btn barcode-btn">
+                  <span>Scan Barcode</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+                    />
+                  </svg>
+                </button>
+                <input
+                  type="file"
+                  id="barcode-image-input"
+                  accept="image/*"
+                  hidden
+                />
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="recent-scans-section"
+            id="recent-scans-section"
+            style="display: none"
+          >
+            <h2 class="section-title">Recent Scans</h2>
+            <div class="recent-scans-grid" id="recent-scans-grid">
+              <!-- Recent scans will be populated here -->
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Loading Modal -->
+    <div id="loading-modal" class="modal">
+      <div class="modal-content loading-content">
+        <div class="loading-spinner">
+          <div class="spinner-ring"></div>
+          <div class="spinner-ring"></div>
+          <div class="spinner-ring"></div>
+        </div>
+        <h3 class="loading-title">Analyzing Product...</h3>
+        <p class="loading-subtitle">This may take a few moments</p>
+      </div>
+    </div>
+
+    <!-- Configuration (must load first) -->
+    <script src="scripts/config.js"></script>
+
+    <!-- Google Authentication -->
+    <script src="scripts/google-auth.js"></script>
+    <script src="scripts/app.js"></script>
+  </body>
+</html>

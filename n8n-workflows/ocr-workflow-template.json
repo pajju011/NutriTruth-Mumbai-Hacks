@@ -1,0 +1,120 @@
+{
+  "name": "NutriTruth - OCR Product Analysis",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "nutritruth-ocr",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook - Receive Image",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "your-webhook-id"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "filePath": "={{ $json.image }}",
+        "options": {}
+      },
+      "name": "Google Vision - Extract Text (OCR)",
+      "type": "n8n-nodes-base.googleCloudVision",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "credentials": {
+        "googleCloudVisionOAuth2Api": {
+          "id": "your-credentials-id",
+          "name": "Google Cloud Vision account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Parse extracted text to identify ingredients\nconst extractedText = $input.first().json.fullTextAnnotation.text;\nconst userId = $input.first().json.userId;\nconst userAllergies = JSON.parse($input.first().json.allergies || '[]');\n\n// Simple ingredient extraction (you can enhance this)\nconst ingredientsMatch = extractedText.match(/ingredients?:?\\s*([^.]+)/i);\nconst ingredients = ingredientsMatch ? \n  ingredientsMatch[1].split(',').map(i => i.trim()) : [];\n\n// Extract nutrition facts\nconst nutritionPattern = /calories?:?\\s*(\\d+)/i;\nconst caloriesMatch = extractedText.match(nutritionPattern);\n\n// Check for allergens\nconst allergenKeywords = {\n  peanut: ['peanut', 'groundnut'],\n  soy: ['soy', 'soya'],\n  lactose: ['milk', 'lactose', 'dairy', 'whey'],\n  gluten: ['wheat', 'gluten', 'barley', 'rye'],\n  seafood: ['fish', 'shellfish', 'shrimp', 'crab'],\n  artificial: ['artificial', 'color', 'flavour', 'flavor']\n};\n\nconst allergenWarnings = [];\nconst textLower = extractedText.toLowerCase();\n\nuserAllergies.forEach(allergy => {\n  if (allergy === 'none') return;\n  \n  const keywords = allergenKeywords[allergy] || [];\n  const found = keywords.some(keyword => textLower.includes(keyword));\n  \n  if (found) {\n    allergenWarnings.push(`Contains ${allergy}`);\n  }\n});\n\nreturn {\n  success: true,\n  userId: userId,\n  extractedText: extractedText,\n  ingredients: ingredients,\n  allergenWarnings: allergenWarnings,\n  nutritionFacts: {\n    calories: caloriesMatch ? parseInt(caloriesMatch[1]) : null\n  },\n  timestamp: new Date().toISOString()\n};"
+      },
+      "name": "Parse Ingredients & Check Allergens",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "collection": "product_scans",
+        "fields": "userId,extractedText,ingredients,allergenWarnings,nutritionFacts,timestamp"
+      },
+      "name": "MongoDB - Save Scan Result",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1,
+      "position": [850, 300],
+      "credentials": {
+        "mongoDb": {
+          "id": "your-mongodb-credentials-id",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1050, 300]
+    }
+  ],
+  "connections": {
+    "Webhook - Receive Image": {
+      "main": [
+        [
+          {
+            "node": "Google Vision - Extract Text (OCR)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Vision - Extract Text (OCR)": {
+      "main": [
+        [
+          {
+            "node": "Parse Ingredients & Check Allergens",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Ingredients & Check Allergens": {
+      "main": [
+        [
+          {
+            "node": "MongoDB - Save Scan Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB - Save Scan Result": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "id": "nutritruth-ocr-workflow"
+}

@@ -1,0 +1,28 @@
+{
+  "name": "nutritruth",
+  "version": "1.0.0",
+  "description": "Smart food scanning application for allergen detection and nutrition analysis",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve",
+    "dev": "npx serve -l 8000",
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "keywords": [
+    "food",
+    "nutrition",
+    "allergen",
+    "ocr",
+    "barcode",
+    "health",
+    "n8n"
+  ],
+  "author": "NutriTruth Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pajju011/NutriTruth-Mumbai-Hacks"
+  },
+  "devDependencies": {},
+  "dependencies": {}
+}

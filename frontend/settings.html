@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Settings - NutriTruth</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles/main.css" />
+    <style>
+        .settings-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .settings-header {
+            margin-bottom: 3rem;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #10b981;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            gap: 1rem;
+        }
+
+        .settings-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+
+        .settings-subtitle {
+            color: #a0aec0;
+            font-size: 1rem;
+        }
+
+        .settings-section {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .setting-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .setting-label {
+            flex: 1;
+        }
+
+        .setting-name {
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 0.25rem;
+        }
+
+        .setting-description {
+            font-size: 0.875rem;
+            color: #a0aec0;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 28px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .toggle-switch.active {
+            background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch.active .toggle-slider {
+            left: 24px;
+        }
+
+        .select-input {
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: #a0aec0;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .select-input:hover {
+            border-color: rgba(16, 185, 129, 0.3);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .select-input:focus {
+            outline: none;
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+            color: #fff;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #a0aec0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(239, 68, 68, 0.3);
+        }
+
+        .info-box {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            color: #a0aec0;
+            font-size: 0.875rem;
+        }
+
+        .info-box strong {
+            color: #10b981;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #10b981;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #a0aec0;
+        }
+
+        .danger-zone {
+            border-color: rgba(239, 68, 68, 0.3);
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .danger-zone .section-title {
+            color: #fca5a5;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1a202c;
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 1rem;
+        }
+
+        .modal-text {
+            color: #a0aec0;
+            margin-bottom: 2rem;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-btn-confirm {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .modal-btn-cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: #a0aec0;
+        }
+
+        .logo-btn {
+            transition: all 0.3s ease;
+        }
+
+        .logo-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="settings-container">
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;">
+            <a href="index.html#dashboard" style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; text-decoration: none;">
+                <div class="logo-btn" style="width: 40px; height: 40px; background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: 1.25rem;">NT</div>
+            </a>
+        </div>
+        <div class="settings-header">
+            <a href="index.html#dashboard" class="back-link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
+                Back to Dashboard
+            </a>
+            <h1 class="settings-title">⚙️ Settings</h1>
+            <p class="settings-subtitle">Customize your NutriTruth experience</p>
+        </div>
+
+        <!-- Notification Settings -->
+        <div class="settings-section">
+            <h2 class="section-title">
+                <span>🔔</span>
+                Notifications
+            </h2>
+            <div class="info-box">
+                <strong>Note:</strong> Notification settings are saved locally on your device.
+            </div>
+            <div class="setting-item">
+                <div class="setting-label">
+                    <div class="setting-name">Allergen Alerts</div>
+                    <div class="setting-description">Get notified when allergens are detected</div>
+                </div>
+                <div class="toggle-switch active" onclick="toggleSetting(this, 'allergen-alerts')"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-label">
+                    <div class="setting-name">Health Score Warnings</div>
+                    <div class="setting-description">Alert when product health score is low</div>
+                </div>
+                <div class="toggle-switch active" onclick="toggleSetting(this, 'health-warnings')"></div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-label">
+                    <div class="setting-name">New Features</div>
+                    <div class="setting-description">Be notified about new features</div>
+                </div>
+                <div class="toggle-switch" onclick="toggleSetting(this, 'new-features')"></div>
+            </div>
+        </div>
+
+        <!-- Display Settings -->
+        <div class="settings-section">
+            <h2 class="section-title">
+                <span>🎨</span>
+                Display
+            </h2>
+            <div class="setting-item">
+                <div class="setting-label">
+                    <div class="setting-name">Theme</div>
+                    <div class="setting-description">Choose your preferred theme</div>
+                </div>
+                <select class="select-input" id="theme-select" onchange="changeSetting('theme', this.value)">
+                    <option value="dark">Dark (Default)</option>
+                    <option value="light">Light</option>
+                    <option value="auto">Auto (System)</option>
+                </select>
+            </div>
+            <div class="setting-item">
+                <div class="setting-label">
+                    <div class="setting-name">Items Per Page</div>
+                    <div class="setting-description">History page items per page</div>
+                </div>
+                <select class="select-input" id="items-select" onchange="changeSetting('items-per-page', this.value)">
+                    <option value="6">6 Items</option>
+                    <option value="12" selected>12 Items</option>
+                    <option value="24">24 Items</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Privacy & Data -->
+        <div class="settings-section">
+            <h2 class="section-title">
+                <span>🔒</span>
+                Privacy & Data
+            </h2>
+            <div class="info-box">
+                <strong>Your Privacy:</strong> All data is stored locally on your device. No data is sent to external servers.
+            </div>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-value" id="data-size">0 KB</div>
+                    <div class="stat-label">Data Size</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="scan-count">0</div>
+                    <div class="stat-label">Scans Stored</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="last-scan">Never</div>
+                    <div class="stat-label">Last Scan</div>
+                </div>
+            </div>
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="exportData()">📥 Export Data</button>
+                <button class="btn btn-secondary" onclick="downloadBackup()">💾 Download Backup</button>
+            </div>
+        </div>
+
+        <!-- App Information -->
+        <div class="settings-section">
+            <h2 class="section-title">
+                <span>ℹ️</span>
+                About
+            </h2>
+            <div class="setting-item">
+                <div class="setting-label">
+                    <div class="setting-name">App Version</div>
+                    <div class="setting-description">Current version information</div>
+                </div>
+                <div style="color: #a0aec0;">v1.0.0</div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-label">
+                    <div class="setting-name">Last Updated</div>
+                    <div class="setting-description">Latest app update</div>
+                </div>
+                <div style="color: #a0aec0;">November 2025</div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-label">
+                    <div class="setting-name">Status</div>
+                    <div class="setting-description">Application status</div>
+                </div>
+                <div style="color: #10b981; font-weight: 600;">✅ Operational</div>
+            </div>
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="openHelp()">❓ Help & Support</button>
+                <button class="btn btn-secondary" onclick="openPrivacy()">📄 Privacy Policy</button>
+            </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="settings-section danger-zone">
+            <h2 class="section-title">
+                <span>⚠️</span>
+                Danger Zone
+            </h2>
+            <p style="color: #a0aec0; margin-bottom: 1rem;">
+                These actions cannot be undone. Please proceed with caution.
+            </p>
+            <div class="button-group">
+                <button class="btn btn-danger" onclick="openClearDataModal()">🗑️ Clear All Data</button>
+                <button class="btn btn-danger" onclick="openResetModal()">🔄 Reset to Default</button>
+            </div>
+        </div>
+
+        <!-- Save Settings -->
+        <div class="button-group" style="margin-top: 3rem;">
+            <button class="btn btn-primary" onclick="saveSettings()">💾 Save Settings</button>
+            <button class="btn btn-secondary" onclick="resetSettings()">↺ Reset to Default</button>
+        </div>
+    </div>
+
+    <!-- Clear Data Modal -->
+    <div class="modal" id="clear-data-modal">
+        <div class="modal-content">
+            <h3 class="modal-title">Clear All Data?</h3>
+            <p class="modal-text">This will delete all your scans, profile data, and settings. This action cannot be undone.</p>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-cancel" onclick="closeClearDataModal()">Cancel</button>
+                <button class="modal-btn modal-btn-confirm" onclick="clearAllData()">Clear All Data</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reset Modal -->
+    <div class="modal" id="reset-modal">
+        <div class="modal-content">
+            <h3 class="modal-title">Reset to Default?</h3>
+            <p class="modal-text">This will reset all settings to their default values. Your data will not be affected.</p>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-cancel" onclick="closeResetModal()">Cancel</button>
+                <button class="modal-btn modal-btn-confirm" onclick="resetToDefault()">Reset Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="scripts/settings.js"></script>
+</body>
+</html>
