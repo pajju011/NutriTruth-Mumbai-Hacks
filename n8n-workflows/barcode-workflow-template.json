@@ -1,0 +1,187 @@
+{
+  "name": "NutriTruth - Barcode Lookup",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "nutritruth-barcode",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook - Receive Barcode Image",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "your-barcode-webhook-id"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "filePath": "={{ $json.barcode_image }}",
+        "options": {}
+      },
+      "name": "Google Vision - Extract Barcode",
+      "type": "n8n-nodes-base.googleCloudVision",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "credentials": {
+        "googleCloudVisionOAuth2Api": {
+          "id": "your-credentials-id",
+          "name": "Google Cloud Vision account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Extract barcode number from OCR result\nconst text = $input.first().json.fullTextAnnotation.text;\nconst barcodeMatch = text.match(/\\d{8,13}/);\nconst barcode = barcodeMatch ? barcodeMatch[0] : null;\n\nif (!barcode) {\n  throw new Error('No barcode found in image');\n}\n\nreturn {\n  barcode: barcode,\n  userId: $input.first().json.userId,\n  allergies: $input.first().json.allergies\n};"
+      },
+      "name": "Extract Barcode Number",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://world.openfoodfacts.org/api/v0/product/{{ $json.barcode }}.json",
+        "options": {}
+      },
+      "name": "OpenFoodFacts API Lookup",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [850, 200]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.upcitemdb.com/prod/trial/lookup?upc={{ $json.barcode }}",
+        "options": {}
+      },
+      "name": "UPC Database Lookup",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [850, 400]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Merge data from multiple sources\nconst barcode = $input.first().json.barcode;\nconst userId = $input.first().json.userId;\nconst userAllergies = JSON.parse($input.first().json.allergies || '[]');\n\n// Get data from OpenFoodFacts (first input)\nconst openFoodData = $input.first().json;\nconst productData = openFoodData.product || {};\n\n// Get data from UPC Database (second input if available)\nconst upcData = $input.all().length > 1 ? $input.all()[1].json : {};\n\n// Combine data\nconst productName = productData.product_name || upcData.title || 'Unknown Product';\nconst brand = productData.brands || upcData.brand || 'Unknown Brand';\nconst ingredients = productData.ingredients_text || '';\n\n// Check for allergens\nconst allergenKeywords = {\n  peanut: ['peanut', 'groundnut'],\n  soy: ['soy', 'soya'],\n  lactose: ['milk', 'lactose', 'dairy', 'whey'],\n  gluten: ['wheat', 'gluten', 'barley', 'rye'],\n  seafood: ['fish', 'shellfish', 'shrimp', 'crab'],\n  artificial: ['artificial', 'color', 'flavour', 'flavor']\n};\n\nconst allergenWarnings = [];\nconst ingredientsLower = ingredients.toLowerCase();\n\nuserAllergies.forEach(allergy => {\n  if (allergy === 'none') return;\n  \n  const keywords = allergenKeywords[allergy] || [];\n  const found = keywords.some(keyword => ingredientsLower.includes(keyword));\n  \n  if (found) {\n    allergenWarnings.push(`Contains ${allergy}`);\n  }\n});\n\nreturn {\n  success: true,\n  barcode: barcode,\n  productName: productName,\n  brand: brand,\n  ingredients: ingredients.split(',').map(i => i.trim()).filter(i => i),\n  allergenWarnings: allergenWarnings,\n  nutritionFacts: {\n    calories: productData.nutriments?.['energy-kcal'] || null,\n    protein: productData.nutriments?.proteins_100g ? `${productData.nutriments.proteins_100g}g` : null,\n    carbs: productData.nutriments?.carbohydrates_100g ? `${productData.nutriments.carbohydrates_100g}g` : null,\n    fat: productData.nutriments?.fat_100g ? `${productData.nutriments.fat_100g}g` : null\n  },\n  timestamp: new Date().toISOString()\n};"
+      },
+      "name": "Merge & Process Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "collection": "product_scans",
+        "fields": "userId,barcode,productName,brand,ingredients,allergenWarnings,nutritionFacts,timestamp"
+      },
+      "name": "MongoDB - Save Result",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1,
+      "position": [1250, 300],
+      "credentials": {
+        "mongoDb": {
+          "id": "your-mongodb-credentials-id",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1450, 300]
+    }
+  ],
+  "connections": {
+    "Webhook - Receive Barcode Image": {
+      "main": [
+        [
+          {
+            "node": "Google Vision - Extract Barcode",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Vision - Extract Barcode": {
+      "main": [
+        [
+          {
+            "node": "Extract Barcode Number",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Barcode Number": {
+      "main": [
+        [
+          {
+            "node": "OpenFoodFacts API Lookup",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "UPC Database Lookup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenFoodFacts API Lookup": {
+      "main": [
+        [
+          {
+            "node": "Merge & Process Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UPC Database Lookup": {
+      "main": [
+        [
+          {
+            "node": "Merge & Process Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge & Process Data": {
+      "main": [
+        [
+          {
+            "node": "MongoDB - Save Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB - Save Result": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "id": "nutritruth-barcode-workflow"
+}

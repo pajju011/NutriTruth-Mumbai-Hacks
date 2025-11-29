@@ -1,0 +1,18 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="60" cy="60" r="55" fill="url(#gradient1)"/>
+  <path d="M60 20C37.9 20 20 37.9 20 60C20 82.1 37.9 100 60 100C82.1 100 100 82.1 100 60C100 37.9 82.1 20 60 20ZM60 90C43.4 90 30 76.6 30 60C30 43.4 43.4 30 60 30C76.6 30 90 43.4 90 60C90 76.6 76.6 90 60 90Z" fill="white"/>
+  <path d="M60 40C48.95 40 40 48.95 40 60C40 71.05 48.95 80 60 80C71.05 80 80 71.05 80 60C80 48.95 71.05 40 60 40Z" fill="url(#gradient2)"/>
+  <circle cx="50" cy="55" r="5" fill="white"/>
+  <circle cx="70" cy="55" r="5" fill="white"/>
+  <path d="M50 70C50 70 55 75 60 75C65 75 70 70 70 70" stroke="white" stroke-width="3" stroke-linecap="round"/>
+  <defs>
+    <linearGradient id="gradient1" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#10b981"/>
+      <stop offset="1" stop-color="#06b6d4"/>
+    </linearGradient>
+    <linearGradient id="gradient2" x1="40" y1="40" x2="80" y2="80" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#34d399"/>
+      <stop offset="1" stop-color="#22d3ee"/>
+    </linearGradient>
+  </defs>
+</svg>
