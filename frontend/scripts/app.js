@@ -448,152 +448,133 @@ async function processProductImage(file) {
 }
 
 /**
- * Get demo product data for testing
- * Based on Beef Curry Rice product from image
+ * Get demo product data for testing - KitKat Chocolate Bar
  */
 function getDemoProductData(file) {
   // Check user allergies to generate warnings
   const userAllergies = AppState.allergies || [];
-  const detectedAllergens = ["Soy", "Gluten"];
+  const detectedAllergens = ["Milk", "Wheat", "Soy"];
 
   // Find matches between user allergies and product allergens
   const matches = userAllergies.filter((allergy) =>
     detectedAllergens.some(
       (detected) =>
         detected.toLowerCase().includes(allergy.toLowerCase()) ||
-        allergy.toLowerCase().includes(detected.toLowerCase())
+        allergy.toLowerCase().includes(detected.toLowerCase()) ||
+        (allergy === "lactose" && detected === "Milk") ||
+        (allergy === "gluten" && detected === "Wheat")
     )
   );
 
   return {
     // Required fields for result.js
-    name: "Beef Curry with Rice",
-    brand: "Ready Meals Co.",
-    barcode: "5012345678901",
-    category: "Ready Meals",
+    name: "KitKat 4 Finger Milk Chocolate Bar",
+    brand: "Nestlé",
+    barcode: "5000159461122",
+    category: "Chocolate & Confectionery",
     image: file
       ? URL.createObjectURL(file)
-      : "https://via.placeholder.com/400x400?text=Product+Image",
+      : "https://via.placeholder.com/400x400?text=KitKat",
 
     // Health analysis
-    healthScore: 62,
+    healthScore: 35,
     healthTag: "risky",
 
-    // Nutrition data (per 100g as sold - from image)
+    // Nutrition data (per 41.5g bar)
     nutrition: {
-      calories: 365,
-      totalFat: 7.1,
-      saturatedFat: 3.3,
-      transFat: 0,
-      cholesterol: 25,
-      sodium: 450,
-      totalCarbs: 63.7,
-      fiber: 3.2,
-      sugars: 7.4,
-      protein: 11.5,
+      calories: 218,
+      totalFat: 11.2,
+      saturatedFat: 6.5,
+      transFat: 0.1,
+      cholesterol: 5,
+      sodium: 35,
+      totalCarbs: 26.8,
+      fiber: 0.7,
+      sugars: 21.8,
+      protein: 2.8,
       vitaminD: 0,
-      calcium: 40,
-      iron: 2.5,
-      potassium: 280,
+      calcium: 60,
+      iron: 1.2,
+      potassium: 120,
     },
 
-    // Macro distribution (calculated from nutrition)
+    // Macro distribution
     macros: {
-      carbs: 71, // 63.7g carbs
-      protein: 13, // 11.5g protein
-      fat: 16, // 7.1g fat
+      carbs: 66,
+      protein: 7,
+      fat: 27,
     },
 
     // Ingredients list with safety flags
     ingredients: [
-      { name: "Rice", safe: true },
-      { name: "Water", safe: true },
-      { name: "Beef", safe: true },
+      { name: "Sugar", safe: true },
+      { name: "Wheat Flour", safe: false, harmful: true, severity: "low" },
+      { name: "Cocoa Butter", safe: true },
       {
-        name: "Prepared Soya Protein",
+        name: "Skimmed Milk Powder",
         safe: false,
         harmful: true,
         severity: "low",
       },
-      { name: "Onion", safe: true },
-      { name: "Cornflour", safe: true },
-      { name: "Red & Green Peppers", safe: true },
-      { name: "Tomato", safe: true },
-      { name: "Sugar", safe: true },
-      { name: "Carrot", safe: true },
-      { name: "Peas", safe: true },
+      { name: "Cocoa Mass", safe: true },
       {
-        name: "Beef Fat with Antioxidant (BHA)",
+        name: "Vegetable Fat (Palm)",
         safe: false,
         harmful: true,
         severity: "medium",
       },
-      { name: "Curry Spices", safe: true },
+      { name: "Lactose", safe: false, harmful: true, severity: "low" },
+      { name: "Whey Powder", safe: true },
+      {
+        name: "Emulsifier (Soy Lecithin)",
+        safe: false,
+        harmful: true,
+        severity: "low",
+      },
+      { name: "Yeast", safe: true },
       { name: "Salt", safe: true },
-      { name: "Yeast Extract", safe: true },
-      { name: "Citric Acid", safe: true },
-      {
-        name: "Flavour Enhancers (Monosodium Glutamate, Sodium 5'-Ribonucleotide)",
-        safe: false,
-        harmful: true,
-        severity: "medium",
-      },
-      { name: "Colour (Caramel)", safe: true },
-      { name: "Maltodextrin", safe: true },
-      {
-        name: "Hydrogenated Vegetable Oil",
-        safe: false,
-        harmful: true,
-        severity: "high",
-      },
-      { name: "Acidity Regulator (Sodium Citrate)", safe: true },
+      { name: "Raising Agent (Sodium Bicarbonate)", safe: true },
+      { name: "Natural Vanilla Extract", safe: true },
     ],
 
     // Harmful ingredients details
     harmfulIngredients: [
       {
-        name: "Monosodium Glutamate (MSG)",
+        name: "Palm Oil (Vegetable Fat)",
         severity: "medium",
-        eNumber: "E621",
+        eNumber: null,
         description:
-          "A flavour enhancer that may cause headaches, flushing, and sweating in sensitive individuals. Known as 'Chinese Restaurant Syndrome'. Generally recognized as safe but some people report adverse reactions.",
+          "High in saturated fats which can raise LDL cholesterol levels. Also linked to environmental concerns including deforestation and habitat destruction.",
       },
       {
-        name: "Hydrogenated Vegetable Oil",
+        name: "High Sugar Content",
         severity: "high",
         eNumber: null,
         description:
-          "Contains trans fats which increase bad cholesterol (LDL) and decrease good cholesterol (HDL). Linked to increased risk of heart disease, stroke, and type 2 diabetes.",
+          "Contains 21.8g of sugar per bar (52% of the product). Excessive sugar intake is linked to obesity, type 2 diabetes, heart disease, and tooth decay.",
       },
       {
-        name: "BHA (Butylated Hydroxyanisole)",
-        severity: "medium",
-        eNumber: "E320",
-        description:
-          "An antioxidant preservative. Classified as 'reasonably anticipated to be a human carcinogen' by the National Toxicology Program. May cause allergic reactions in some people.",
-      },
-      {
-        name: "Soya Protein",
+        name: "Soy Lecithin",
         severity: "low",
-        eNumber: null,
+        eNumber: "E322",
         description:
-          "May cause allergic reactions in people with soy allergies. Also a common GMO ingredient unless specified organic.",
+          "An emulsifier derived from soybeans. Generally safe but may cause allergic reactions in people with soy allergies.",
       },
     ],
 
     // Advertisement claims verification
     adClaims: [
       {
-        claim: "Less than 10% meat as served",
-        truthScore: 95,
+        claim: "Have a Break, Have a KitKat",
+        truthScore: 70,
         explanation:
-          "The label honestly states the meat content is less than 10%. This is transparent labeling, though the actual meat content is quite low for a 'beef curry' product.",
+          "Marketing slogan promoting the product as a snack. While it can be enjoyed as an occasional treat, the high sugar and fat content make it unsuitable for frequent consumption.",
       },
       {
-        claim: "Ready Meal - Quick & Convenient",
-        truthScore: 80,
+        claim: "Made with 100% Sustainably Sourced Cocoa",
+        truthScore: 85,
         explanation:
-          "True that it's convenient, but ready meals typically contain more preservatives and sodium than home-cooked alternatives.",
+          "Nestlé has committed to sustainable cocoa sourcing through their Cocoa Plan. However, palm oil sustainability remains a concern.",
       },
     ],
 
